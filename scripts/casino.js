@@ -7,7 +7,7 @@ module.exports = function () {
     var defaultMaster = "BeastCharizard";
     var defaultChannel = "Casino";
   
-	var coins = 100;
+	this.coins = 0;
 	var payout;
 	var caldice;
 	var crapsdice;
@@ -26,13 +26,12 @@ module.exports = function () {
 		if(commandData === undefined){
 			return;
 		}
-		if(coins[sys.name(src)] <= 0){
-			casinobot.sendMessage(src, "You don't have any coins so you are not able to play.", casinochan);
-			return;
+		if (!isNonNegative(SESSION.users(src).coins)) {
+            SESSION.users(src).coins = 100;
 		}
 		bet = commandData.split(":")[0];
         calnumber = commandData.split(":")[1];
-        if(coins[sys.name(src)] < bet){
+        if(SESSION.users(src).coins < bet){
 			casinobot.sendMessage(src, "You don't have enough coins to make that bet.", casinochan);
 			return;
         }
@@ -100,7 +99,10 @@ this.playCraps = function (src, commandData){
 		if(commandData === undefined){
 			return;
 		}
-		if(coins[sys.name(src)] <= 0){
+		if (!isNonNegative(SESSION.users(src).coins)) {
+            SESSION.users(src).coins = 100;
+		}
+		if(SESSION.users(src).coins <= 0){
 			casinobot.sendMessage(src, "You don't have any coins so you are not able to play.", casinochan);
 			return;
 		}
@@ -145,12 +147,15 @@ this.playCraps = function (src, commandData){
 		}
 		};
 	this.playSlots = function (src){
-		if(coins[sys.name(src)] <= 0){
+		if (!isNonNegative(SESSION.users(src).coins)) {
+            SESSION.users(src).coins = 100;
+		}
+		if(SESSION.users(src).coins <= 0){
 			casinobot.sendMessage(src, "You don't have any coins so you are not able to play.", casinochan);
 			return;
 		}
 		coins[sys.name(src)] -= 1;
-		slot = Math.floor((Math.random()*200)+1);
+		slot = Math.floor((Math.random()*300)+1);
 		if(slot == 1){
 			coins[sys.name(src)] += jackpot;
 			casinobot.sendMessage(src, "You hit the jackpot!!!  You got " +jackpot+ " coins!", casinochan);
@@ -160,25 +165,25 @@ this.playCraps = function (src, commandData){
 			return;
 		}
 		if(slot <= 8){
-			coins[sys.name(src)] += 200;
+			coins[sys.name(src)] += 32;
 			casinobot.sendMessage(src, "You hit a great number and got 200 coins!!!", casinochan);
 			jackpot += 1;
 			return;
 		}
 		if(slot <= 18){
-			coins[sys.name(src)] += 150;
+			coins[sys.name(src)] += 16;
 			casinobot.sendMessage(src, "You hit a good number and got 150 coins!!", casinochan);
 			jackpot += 1;
 			return;
 		}
 		if(slot <= 35){
-			coins[sys.name(src)] += 100;
+			coins[sys.name(src)] += 8;
 			casinobot.sendMessage(src, "You hit an okay number and got 100 coins!", casinochan);
 			jackpot += 1;
 			return;
 		}
 		if(slot <= 75){
-			coins[sys.name(src)] += 50;
+			coins[sys.name(src)] += 4;
 			casinobot.sendMessage(src, "Your got lucky and won 50 coins.", casinochan);
 			jackpot += 1;
 			return;
@@ -197,6 +202,153 @@ this.playCraps = function (src, commandData){
 		slot = undefined;
 		if(coins[sys.name(src)] <= 0 || coins[sys.name(src)] == undefined){
 			coins[sys.name(src)] == 100;
+		}
+	};
+	this.playNSlots = function (src) {
+        var slot;
+		if (!isNonNegative(SESSION.users(src).coins)) {
+            SESSION.users(src).coins = 0;
+		}
+		SESSION.users(src).coins -= 5;
+		slot = Math.floor((Math.random() * 300) + 1);
+		if (slot === 1) {
+			global.coins[sys.name(src).toLowerCase()] += jackpot;
+			casinobot.sendMessage(src, "You hit the jackpot!!!  You got " + jackpot + " coins!", casinochan);
+			casinobot.sendAll(sys.name(src) + " just hit the jackpot and got " + jackpot + " coins in #Casino!!!!!", 0);
+			jackpot = 1000;
+			return;
+		}
+		if (slot <= 5) {
+			global.coins[sys.name(src).toLowerCase()] += 80;
+			casinobot.sendMessage(src, "You hit a great number and got 150 coins!!!", casinochan);
+			jackpot += 1;
+			return;
+		}
+		if (slot <= 14) {
+			global.coins[sys.name(src).toLowerCase()] += 40;
+			casinobot.sendMessage(src, "You hit a good number and got 100 coins!!", casinochan);
+			jackpot += 1;
+			return;
+		}
+		if (slot <= 30) {
+			global.coins[sys.name(src).toLowerCase()] += 20;
+			casinobot.sendMessage(src, "You hit an okay number and got 50 coins!", casinochan);
+			jackpot += 1;
+			return;
+		}
+		if (slot <= 53) {
+			global.coins[sys.name(src).toLowerCase()] += 10;
+			casinobot.sendMessage(src, "Your got lucky and won 10 coins.", casinochan);
+			jackpot += 1;
+			return;
+		}
+		if (slot <= 85) {
+			global.coins[sys.name(src).toLowerCase()] += 5;
+			casinobot.sendMessage(src, "You got 2 coins.  It is better than nothing.", casinochan);
+			jackpot += 1;
+			return;
+		} else {
+			casinobot.sendMessage(src, "Your luck wasn't good enough for you to win. Better luck next time.", casinochan);
+			jackpot += 1;
+			return;
+		}
+	};
+		this.playQSlots = function (src) {
+        var slot;
+		if (!isNonNegative(SESSION.users(src).coins)) {
+            SESSION.users(src).coins = 0;
+		}
+		SESSION.users(src).coins -= 25;
+		slot = Math.floor((Math.random() * 300) + 1);
+		if (slot === 1) {
+			global.coins[sys.name(src).toLowerCase()] += jackpot;
+			casinobot.sendMessage(src, "You hit the jackpot!!!  You got " + jackpot + " coins!", casinochan);
+			casinobot.sendAll(sys.name(src) + " just hit the jackpot and got " + jackpot + " coins in #Casino!!!!!", 0);
+			jackpot = 1000;
+			return;
+		}
+		if (slot <= 5) {
+			global.coins[sys.name(src).toLowerCase()] += 400;
+			casinobot.sendMessage(src, "You hit a great number and got 150 coins!!!", casinochan);
+			jackpot += 1;
+			return;
+		}
+		if (slot <= 14) {
+			global.coins[sys.name(src).toLowerCase()] += 200;
+			casinobot.sendMessage(src, "You hit a good number and got 100 coins!!", casinochan);
+			jackpot += 1;
+			return;
+		}
+		if (slot <= 30) {
+			global.coins[sys.name(src).toLowerCase()] += 100;
+			casinobot.sendMessage(src, "You hit an okay number and got 50 coins!", casinochan);
+			jackpot += 1;
+			return;
+		}
+		if (slot <= 53) {
+			global.coins[sys.name(src).toLowerCase()] += 50;
+			casinobot.sendMessage(src, "Your got lucky and won 10 coins.", casinochan);
+			jackpot += 1;
+			return;
+		}
+		if (slot <= 85) {
+			global.coins[sys.name(src).toLowerCase()] += 25;
+			casinobot.sendMessage(src, "You got 2 coins.  It is better than nothing.", casinochan);
+			jackpot += 1;
+			return;
+		} else {
+			casinobot.sendMessage(src, "Your luck wasn't good enough for you to win. Better luck next time.", casinochan);
+			jackpot += 1;
+			return;
+		}
+	};
+		this.playDSlots = function (src) {
+        var slot;
+		if (!isNonNegative(SESSION.users(src).coins)) {
+            SESSION.users(src).coins = 0;
+		}
+		SESSION.users(src).coins -= 100;
+		slot = Math.floor((Math.random() * 300) + 1);
+		if (slot === 1) {
+			global.coins[sys.name(src).toLowerCase()] += jackpot;
+			casinobot.sendMessage(src, "You hit the jackpot!!!  You got " + jackpot + " coins!", casinochan);
+			casinobot.sendAll(sys.name(src) + " just hit the jackpot and got " + jackpot + " coins in #Casino!!!!!", 0);
+			jackpot = 1000;
+			return;
+		}
+		if (slot <= 5) {
+			global.coins[sys.name(src).toLowerCase()] += 1600;
+			casinobot.sendMessage(src, "You hit a great number and got 150 coins!!!", casinochan);
+			jackpot += 1;
+			return;
+		}
+		if (slot <= 14) {
+			global.coins[sys.name(src).toLowerCase()] += 800;
+			casinobot.sendMessage(src, "You hit a good number and got 100 coins!!", casinochan);
+			jackpot += 1;
+			return;
+		}
+		if (slot <= 30) {
+			global.coins[sys.name(src).toLowerCase()] += 400;
+			casinobot.sendMessage(src, "You hit an okay number and got 50 coins!", casinochan);
+			jackpot += 1;
+			return;
+		}
+		if (slot <= 53) {
+			global.coins[sys.name(src).toLowerCase()] += 200;
+			casinobot.sendMessage(src, "Your got lucky and won 10 coins.", casinochan);
+			jackpot += 1;
+			return;
+		}
+		if (slot <= 85) {
+			global.coins[sys.name(src).toLowerCase()] += 100;
+			casinobot.sendMessage(src, "You got 2 coins.  It is better than nothing.", casinochan);
+			jackpot += 1;
+			return;
+		} else {
+			casinobot.sendMessage(src, "Your luck wasn't good enough for you to win. Better luck next time.", casinochan);
+			jackpot += 1;
+			return;
 		}
 	};
 this.showGames = function (){
@@ -263,11 +415,14 @@ this.showHelp = function (commandData){
         user: {
             cal: [this.playCAL, "To play Chuck A Luck. Used like /cal bet:number"],
             craps: [this.playCraps, "To play Craps. Used like /craps bet"],
-	    slots: [this.playSlots, "To play the slots. Used like /slots"],
+	    slots: [this.playSlots, "To play the Penny slots. Used like /slots"],
             help: [this.showHelp, "To learn how to play the games."],
             games: [this.showGames, "To see all the games you can play."],
             mycoins: [this.showmyCoins, "To find out how many coins you have."],
-	    casinocommands: [this.showCommands, "To see a list of possible commands."]
+	    casinocommands: [this.showCommands, "To see a list of possible commands."],
+		nslots: [this.playNSlots, "To play the Nickle slots. Used like /nslots"],
+		qslots: [this.playQSlots, "To play the Quarter slots. Used like /qslots"],
+		dslots: [this.playDSlots, "To play the Dollar slots. Used like /dslots"]
         }
 	};
 this.handleCommand = function (src, message, channel) {
